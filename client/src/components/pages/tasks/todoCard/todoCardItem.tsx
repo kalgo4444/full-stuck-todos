@@ -12,10 +12,10 @@ import { getHoursMinutes } from '@/hooks/useDate';
 import todoService from '@/services/todos.service';
 import { ITodo } from '@/types/todos.interface';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { key_getC, key_getNC } from '@/const/queryKey';
+import { todos_key1, todos_key2 } from '@/const/queryKey';
 import { toast } from 'sonner';
 import CustomFade from '@/components/ui/custom-fade';
-import { Magnetic } from '../../../../../components/motion-primitives/magnetic';
+import { Magnetic } from '../../../ui/magnetic';
 
 const TodoCardItem = ({ todo }: { todo: ITodo }) => {
   const queryClient = useQueryClient();
@@ -23,21 +23,21 @@ const TodoCardItem = ({ todo }: { todo: ITodo }) => {
   const completedPatch = useMutation({
     mutationFn: (id: string) => todoService.pathTodo(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [key_getNC] });
+      queryClient.invalidateQueries({ queryKey: [todos_key1] });
     },
   });
 
   const deleteTodo = useMutation({
     mutationFn: (id: string) => todoService.deleteTodo(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [key_getNC] });
+      queryClient.invalidateQueries({ queryKey: [todos_key1] });
     },
   });
 
   const handleCompletedTodo = (id: string) => {
     completedPatch.mutate(id, {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: [key_getC] });
+        queryClient.invalidateQueries({ queryKey: [todos_key2] });
         toast.success('Todo is completed');
       },
       onError: () => {
@@ -49,7 +49,7 @@ const TodoCardItem = ({ todo }: { todo: ITodo }) => {
   const handleDeleteTodo = (id: string) => {
     deleteTodo.mutate(id, {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: [key_getC] });
+        queryClient.invalidateQueries({ queryKey: [todos_key2] });
         toast.success('Todo is deleted');
       },
       onError: () => {
@@ -59,50 +59,48 @@ const TodoCardItem = ({ todo }: { todo: ITodo }) => {
   };
 
   return (
-    <>
-      <CustomFade>
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle>
-              <div className="flex items-center justify-between">
-                <b>{getHoursMinutes(todo.createdAt).yyyyy_mm}</b>
-                <b>{getHoursMinutes(todo.createdAt).hh_mm}</b>
-              </div>
-            </CardTitle>
-          </CardHeader>
-          <Separator />
-          <CardContent>
-            {todo.completed ? (
-              <CardDescription>{todo.description}</CardDescription>
-            ) : (
-              <p>{todo.description}</p>
-            )}
-          </CardContent>
-          <CardFooter>
-            <div className="flex w-full items-center justify-end gap-x-5">
-              {!todo.completed && (
-                <Magnetic intensity={0.4}>
-                  <Button
-                    onClick={() => handleCompletedTodo(todo._id)}
-                    disabled={todo.completed}
-                  >
-                    make a done
-                  </Button>
-                </Magnetic>
-              )}
+    <CustomFade>
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>
+            <div className="flex items-center justify-between">
+              <b>{getHoursMinutes(todo.createdAt).yyyyy_mm}</b>
+              <b>{getHoursMinutes(todo.createdAt).hh_mm}</b>
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <Separator />
+        <CardContent>
+          {todo.completed ? (
+            <CardDescription>{todo.description}</CardDescription>
+          ) : (
+            <p>{todo.description}</p>
+          )}
+        </CardContent>
+        <CardFooter>
+          <div className="flex w-full items-center justify-end gap-x-5">
+            {!todo.completed && (
               <Magnetic intensity={0.4}>
                 <Button
-                  onClick={() => handleDeleteTodo(todo._id)}
-                  variant={'secondary'}
+                  onClick={() => handleCompletedTodo(todo._id)}
+                  disabled={todo.completed}
                 >
-                  Delete
+                  make a done
                 </Button>
               </Magnetic>
-            </div>
-          </CardFooter>
-        </Card>
-      </CustomFade>
-    </>
+            )}
+            <Magnetic intensity={0.4}>
+              <Button
+                onClick={() => handleDeleteTodo(todo._id)}
+                variant={'secondary'}
+              >
+                Delete
+              </Button>
+            </Magnetic>
+          </div>
+        </CardFooter>
+      </Card>
+    </CustomFade>
   );
 };
 

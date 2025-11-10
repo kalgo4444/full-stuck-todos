@@ -3,7 +3,7 @@
 import BoxHeader from '@/components/layout/BoxHeader';
 import CardBox from '@/components/layout/CardBox';
 import { Separator } from '@/components/ui/separator';
-import { key_getC, key_getNC } from '@/const/queryKey';
+import { todos_key1, todos_key2 } from '@/const/queryKey';
 import todoService from '@/services/todos.service';
 import { useQuery } from '@tanstack/react-query';
 import Cookie from 'js-cookie';
@@ -19,12 +19,12 @@ const TasksPage = () => {
   }, []);
 
   const getNCtodos = useQuery({
-    queryKey: [key_getNC],
+    queryKey: [todos_key1],
     queryFn: () => todoService.getNC(username),
   });
 
   const getCtodos = useQuery({
-    queryKey: [key_getC],
+    queryKey: [todos_key2],
     queryFn: () => todoService.getC(username),
   });
 

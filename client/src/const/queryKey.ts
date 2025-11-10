@@ -1,2 +1,2 @@
-export const key_getNC: string = 'getNCtodos-key';
-export const key_getC: string = 'getCtodos-key';
+export const todos_key1: string = 'todos_key1';
+export const todos_key2: string = 'todos_key2';

@@ -1,101 +1,101 @@
 'use client';
 
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '../ui/button';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import {} from '@hookform/resolvers';
+
+import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
 import { useAddToggleModal } from '@/lib/useAddToggleModal';
-import { Textarea } from '../ui/textarea';
-import { Label } from '../ui/label';
-import { useState } from 'react';
-import AlertMessage from './AlertMessage';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import todoService, { IPostBody } from '@/services/todos.service';
-import { key_getNC } from '@/const/queryKey';
+import { todos_key1, todos_key2 } from '@/const/queryKey';
 import { useCookies } from '@/hooks/useCookies';
-import { toast } from 'sonner';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '../ui/form';
 import { AutosizeTextarea } from '../ui/autosize-textarea';
+import { Button } from '../ui/button';
+
+const formSchema = z.object({
+  description: z.string('Must be string').min(1, 'Description is required'),
+});
+
+type Description = z.infer<typeof formSchema>;
 
 export default function AddTaskModal() {
-  const [description, setDescription] = useState<string>('');
-  const [isDescError, setIsDescError] = useState<boolean>(false);
   const { isOpen, toggleModal } = useAddToggleModal();
   const queryClient = useQueryClient();
   const { username } = useCookies();
 
-  const postMutation = useMutation({
-    mutationFn: (body: IPostBody) => todoService.postTodo(body),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [key_getNC] });
+  const form = useForm<Description>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      description: '',
     },
   });
 
-  const handleAddTask = (): void => {
-    if (!description.trim()) {
-      setIsDescError(true);
-      return;
-    }
+  const postMutation = useMutation({
+    mutationFn: (body: IPostBody) => todoService.postTodo(body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [todos_key1] });
+    },
+  });
+
+  function AddTaskSubmit({ description }: Description) {
     postMutation.mutate(
       { description, username },
       {
         onSuccess: () => {
-          setDescription('');
+          queryClient.invalidateQueries({ queryKey: [todos_key2] });
+          form.reset();
           toggleModal();
-          toast.success('Todo success created');
-        },
-        onError: () => {
-          toast.error('Todo is not created, please try again');
         },
       },
     );
-  };
+  }
 
   return (
     <Dialog open={isOpen}>
       <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add your task</DialogTitle>
-        </DialogHeader>
-        <div className="mt-2">
-          <Label htmlFor="description">Description</Label>
-          <AutosizeTextarea
-            placeholder="Today, I need read books"
-            id="description"
-            className="my-2"
-            minHeight={200}
-            maxHeight={500}
-            value={description}
-            onChange={(e) => {
-              setDescription(e.target.value);
-              setIsDescError(false);
-            }}
-          />
-          {isDescError && (
-            <AlertMessage
-              message="description is empty"
-              variant="destructive"
-            />
-          )}
-        </div>
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button
-              type="button"
-              onClick={() => toggleModal()}
-              variant="outline"
+        <div>
+          <Form {...form}>
+            <form
+              className="space-y-4"
+              onSubmit={form.handleSubmit(AddTaskSubmit)}
             >
-              Cancel
-            </Button>
-          </DialogClose>
-          <Button onClick={handleAddTask} type="submit">
-            Add task
-          </Button>
-        </DialogFooter>
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel htmlFor="desc">Description</FormLabel>
+                    <FormControl>
+                      <AutosizeTextarea
+                        minHeight={200}
+                        maxHeight={500}
+                        id="desc"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button type="button" onClick={toggleModal} variant="outline">
+                  Cancel
+                </Button>
+                <Button type="submit">Submit</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </div>
       </DialogContent>
     </Dialog>
   );

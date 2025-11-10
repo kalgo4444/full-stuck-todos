@@ -1,84 +1,84 @@
 'use client';
 
-import AlertMessage from '@/components/layout/AlertMessage';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 import { Input } from '@/components/ui/input';
-import { Label } from '@radix-ui/react-label';
 import { useRouter } from 'next/navigation';
-import { FormEvent, useState } from 'react';
 import Cookie from 'js-cookie';
 import CustomFade from '@/components/ui/custom-fade';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+
+const formSchema = z.object({
+  username: z
+    .string('Must be string')
+    .min(1, 'username is required')
+    .lowercase('username is to be lowercase'),
+});
+
+type User = z.infer<typeof formSchema>;
 
 const AuthPage = () => {
-  const [username, setUsername] = useState<string>('');
-  const [isError, setIsError] = useState<boolean>(false);
   const router = useRouter();
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
-    e.preventDefault();
+  const form = useForm<User>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      username: '',
+    },
+  });
 
-    if (!username.trim()) {
-      setIsError(true);
-      return;
-    }
-
-    Cookie.set('uname', username, { expires: 0.125, secure: true });
-    router.replace(`/tasks`);
-    setUsername('');
-  };
+  function onSubmit(user: User) {
+    Cookie.set('uname', user.username);
+    router.replace('/tasks');
+    form.reset();
+  }
 
   return (
     <section className="w-full h-screen grid place-items-center">
       <CustomFade>
-        <form className="max-w-sm" onSubmit={handleSubmit}>
-          <Card className="w-full">
-            <CardHeader>
-              <CardTitle className="text-center">Enter your username</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Label htmlFor="username">Username</Label>
-              <Input
-                value={username}
-                onChange={(e) => {
-                  setUsername(e.target.value);
-                  setIsError(false);
-                }}
-                id="username"
-                name="username"
-                placeholder="john123"
-                className="my-2"
-                required
-              />
-              {isError && (
-                <AlertMessage
-                  message="username is empty"
-                  variant="destructive"
-                />
-              )}
-            </CardContent>
-            <CardFooter className="flex items-center gap-x-2">
-              <Button
-                type="button"
-                onClick={() => router.replace('/')}
-                size={'lg'}
-                variant={'secondary'}
-                className="w-1/2"
+        <Card className="max-w-sm">
+          <CardContent>
+            <Form {...form}>
+              <form
+                className="space-y-4"
+                onSubmit={form.handleSubmit(onSubmit)}
               >
-                Home
-              </Button>
-              <Button type="submit" size="lg" className="w-1/2">
-                Submit
-              </Button>
-            </CardFooter>
-          </Card>
-        </form>
+                <FormField
+                  control={form.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-lg" htmlFor="username">
+                        Username
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="john_123"
+                          {...field}
+                          id="username"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button className="w-full" type="submit">
+                  Submit
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
       </CustomFade>
     </section>
   );

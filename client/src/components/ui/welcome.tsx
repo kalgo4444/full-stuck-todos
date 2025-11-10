@@ -1,6 +1,6 @@
 'use client';
 import CustomFade from '@/components/ui/custom-fade';
-import { TextEffect } from '../../../components/motion-primitives/text-effect';
+import { TextEffect } from './text-effect';
 import { useState } from 'react';
 
 export default function Welcome() {

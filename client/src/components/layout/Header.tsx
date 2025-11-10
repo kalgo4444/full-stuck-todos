@@ -4,7 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '../ui/button';
 import Avatar from '../ui/avatar';
 import { useAddToggleModal } from '@/lib/useAddToggleModal';
-import { Magnetic } from '../../../components/motion-primitives/magnetic';
+import { Magnetic } from '../ui/magnetic';
 
 export default function Header() {
   const pathname = usePathname();
